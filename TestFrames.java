@@ -1,7 +1,21 @@
+//code by nick cline
+//todo: more buttons like connect button, joystick, add stuff
+
 import java.awt.BorderLayout;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
+import java.util.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import gnu.io.CommPortIdentifier;
+import gnu.io.SerialPort;
+import gnu.io.SerialPortEvent;
+import gnu.io.SerialPortEventListener;
+import java.util.Enumeration;
+import java.io.IOException;
 
 public class TestFrames extends JFrame {
 
@@ -14,6 +28,15 @@ public class TestFrames extends JFrame {
     private JLabel labelX = new JLabel(Integer.toString(ballPanel.xCoord));
     private JLabel labelY = new JLabel(Integer.toString(ballPanel.yCoord));
     private JLabel coordLabel = new JLabel("Coordinates (X then Y)");
+    private JTextField xText = new JTextField(5);
+    private JTextField yText = new JTextField(5);
+    private JButton coordPress = new JButton("Change Coords");
+    private SerialTest st = new SerialTest();
+    
+    //serial output and input
+    public static BufferedReader input;
+    public static OutputStream output;
+    public static SerialTest serial = new SerialTest();
     //instantiate buttons, labels, and panels
 
 
@@ -29,6 +52,9 @@ public class TestFrames extends JFrame {
         labelPanel.add(coordLabel);
         labelPanel.add(labelX);
         labelPanel.add(labelY);
+        labelPanel.add(xText);
+        labelPanel.add(yText);
+        labelPanel.add(coordPress);
         //add buttons/labels to respective panels
 
         ballPanel.setBackground(Color.RED);
@@ -41,11 +67,13 @@ public class TestFrames extends JFrame {
         jbtRight.addActionListener(new ButtonListener());
         jbtUp.addActionListener(new ButtonListener());
         jbtDown.addActionListener(new ButtonListener());
+        coordPress.addActionListener(new ButtonListener());
         //actionlisteners for button actions
     }
 
     public static void main(String[] args) {
         TestFrames mainWindow = new TestFrames();
+        
         //makes new window
         mainWindow.setTitle("TEST");
         mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -53,6 +81,17 @@ public class TestFrames extends JFrame {
         //sets title and close operation, mainWindow.pack() sets window to size and layouts preferred
         mainWindow.setVisible(true);
         //sets window visible
+        
+        //rxtx block
+    	System.out.println("Starting serial communication...");
+    	serial.initialize();
+    	Thread t = new Thread() {
+    		public void run() {
+    			try {Thread.sleep(1000000);} catch(InterruptedException ie) {}
+    		}
+    	};
+    	t.start();
+    	System.out.println("started");
     }
 
     class ButtonListener implements ActionListener {
@@ -76,7 +115,11 @@ public class TestFrames extends JFrame {
                 ballPanel.down();
                 labelPanel.update(ballPanel.xCoord, ballPanel.yCoord);
             }
-            //checks for where the buttonPressed action is coming from and does according anction
+            
+            if(buttonPressed.getSource() == coordPress) {
+            	ballPanel.replace(Integer.parseInt(xText.getText()),Integer.parseInt(yText.getText()));
+            }
+            //checks for where the buttonPressed action is coming from and does according action
         }
     }
 
@@ -89,22 +132,47 @@ public class TestFrames extends JFrame {
             xCoord-=5;
             repaint();
             //moving ball left and repainting, same functionality for the different directions
+            try {
+            	serial.writeData("test gcode LEFT, would be like G1 F200 -X5");
+            }catch(Exception ex) {System.out.println("couldnt print ioexception");}
+            System.out.println("gcode left attempted");
         }
 
         public void right() {
             xCoord+=5;
             repaint();
+            //remember to put sample gcode writing here
+            
+            try {
+            	serial.writeData("test gcode RIGHT, would be like G1 F200 +X5");
+            }catch(Exception ex) {System.out.println("couldnt print ioexception");}
+            System.out.println("gcode right attempted");
         }
         public void up() {
             yCoord-=5;
             repaint();
+            
+            try {
+            	serial.writeData("test gcode UP, would be like G1 F200 +Y5");
+            }catch(Exception ex) {System.out.println("couldnt print ioexception");}
+            System.out.println("gcode right attempted");
         }
 
         public void down() {
             yCoord+=5;
             repaint();
+            
+            try {
+            	serial.writeData("test gcode DOWN, would be like G1 F200 -Y5");
+            }catch(Exception ex) {System.out.println("couldnt print ioexception");}
+            System.out.println("gcode right attempted");
         }
-
+        
+        public void replace(int x, int y) {
+        	xCoord=x;
+        	yCoord=y;
+        	repaint();
+        }
 
         public Dimension getPreferredSize() {
             return preferredSize;
