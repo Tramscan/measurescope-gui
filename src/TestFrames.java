@@ -5,17 +5,10 @@ import java.awt.BorderLayout;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
-import java.util.*;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
-import gnu.io.SerialPortEvent;
-import gnu.io.SerialPortEventListener;
-import java.util.Enumeration;
+
 import java.io.IOException;
+import jssc.*;
+
 
 public class TestFrames extends JFrame {
 
@@ -31,12 +24,15 @@ public class TestFrames extends JFrame {
     private JTextField xText = new JTextField(5);
     private JTextField yText = new JTextField(5);
     private JButton coordPress = new JButton("Change Coords");
+    private static SerialPort serialPort = new SerialPort("COM1");
+    /*
     private SerialTest st = new SerialTest();
     
     //serial output and input
     public static BufferedReader input;
     public static OutputStream output;
     public static SerialTest serial = new SerialTest();
+    */
     //instantiate buttons, labels, and panels
 
 
@@ -72,6 +68,8 @@ public class TestFrames extends JFrame {
     }
 
     public static void main(String[] args) {
+
+    	
         TestFrames mainWindow = new TestFrames();
         
         //makes new window
@@ -82,16 +80,49 @@ public class TestFrames extends JFrame {
         mainWindow.setVisible(true);
         //sets window visible
         
-        //rxtx block
-    	System.out.println("Starting serial communication...");
-    	serial.initialize();
-    	Thread t = new Thread() {
-    		public void run() {
-    			try {Thread.sleep(1000000);} catch(InterruptedException ie) {}
-    		}
-    	};
-    	t.start();
-    	System.out.println("started");
+       
+        
+    	//jssc part
+    	// getting serial ports list into the array
+    	String[] portNames = SerialPortList.getPortNames();
+    	        
+    	if (portNames.length == 0) {
+    	    System.out.println("There are no serialports  You can use an emulator, such ad VSPE, to create a virtual serial port.");
+    	    System.out.println("Press Enter to exit");
+    	    try {
+    	        System.in.read();
+    	    } catch (IOException e) {
+    	          e.printStackTrace();
+    	    }
+    	    return;
+    	}
+
+    	for (int i = 0; i < portNames.length; i++){
+    	    System.out.println(portNames[i]);
+    	}
+    	
+    	//jssc write block
+    	
+    	//serialport declaration is in instance vars
+    	try {
+    	    serialPort.openPort();
+
+    	    serialPort.setParams(SerialPort.BAUDRATE_9600,
+    	                         SerialPort.DATABITS_8,
+    	                         SerialPort.STOPBITS_1,
+    	                         SerialPort.PARITY_NONE);
+
+    	    serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN | 
+    	                                  SerialPort.FLOWCONTROL_RTSCTS_OUT);
+
+    	    serialPort.addEventListener(new PortReader(), SerialPort.MASK_RXCHAR);
+
+    	    serialPort.writeString("Hurrah!");
+    	}
+    	catch (SerialPortException ex) {
+    	    System.out.println("There are an error on writing string to port T: " + ex);
+    	}
+    	
     }
 
     class ButtonListener implements ActionListener {
@@ -132,10 +163,7 @@ public class TestFrames extends JFrame {
             xCoord-=5;
             repaint();
             //moving ball left and repainting, same functionality for the different directions
-            try {
-            	serial.writeData("test gcode LEFT, would be like G1 F200 -X5");
-            }catch(Exception ex) {System.out.println("couldnt print ioexception");}
-            System.out.println("gcode left attempted");
+            
         }
 
         public void right() {
@@ -143,29 +171,19 @@ public class TestFrames extends JFrame {
             repaint();
             //remember to put sample gcode writing here
             
-            try {
-            	serial.writeData("test gcode RIGHT, would be like G1 F200 +X5");
-            }catch(Exception ex) {System.out.println("couldnt print ioexception");}
-            System.out.println("gcode right attempted");
         }
         public void up() {
             yCoord-=5;
             repaint();
             
-            try {
-            	serial.writeData("test gcode UP, would be like G1 F200 +Y5");
-            }catch(Exception ex) {System.out.println("couldnt print ioexception");}
-            System.out.println("gcode right attempted");
+            
+            
         }
 
         public void down() {
             yCoord+=5;
             repaint();
             
-            try {
-            	serial.writeData("test gcode DOWN, would be like G1 F200 -Y5");
-            }catch(Exception ex) {System.out.println("couldnt print ioexception");}
-            System.out.println("gcode right attempted");
         }
         
         public void replace(int x, int y) {
@@ -201,4 +219,21 @@ public class TestFrames extends JFrame {
     	
 
     }
+    private static class PortReader implements SerialPortEventListener {
+
+        @Override
+        public void serialEvent(SerialPortEvent event) {
+            if(event.isRXCHAR() && event.getEventValue() > 0) {
+                try {
+                    String receivedData = serialPort.readString(event.getEventValue());
+                    System.out.println("Received response: " + receivedData);
+                }
+                catch (SerialPortException ex) {
+                    System.out.println("Error in receiving string from COM-port: " + ex);
+                }
+            }
+        }
+
+    }
 }
+
