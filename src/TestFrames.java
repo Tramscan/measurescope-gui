@@ -138,7 +138,7 @@ public class TestFrames extends JFrame {
             	try {
             	    serialPort.openPort();
             	    System.out.println("Port Opened");
-            	    serialPort.setParams(SerialPort.BAUDRATE_9600,
+            	    serialPort.setParams(SerialPort.BAUDRATE_115200,
             	                         SerialPort.DATABITS_8,
             	                         SerialPort.STOPBITS_1,
             	                         SerialPort.PARITY_NONE);
