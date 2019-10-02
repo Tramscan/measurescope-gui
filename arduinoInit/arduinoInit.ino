@@ -1,6 +1,5 @@
 long duration;
 void setup() {
-  // put your setup code here, to run once:
   pinMode(13, OUTPUT);
   Serial.begin(9600);
   ledBlink();
@@ -9,11 +8,10 @@ void setup() {
 }
 //USE JSSC
 void loop() {
-  // put your main code here, to run repeatedly:
-  String serialMat="G0 X100";
+  String testSendString="G0 X100";
   while(Serial.available()>0){
     
-    if(Serial.readString() == serialMat){
+    if(Serial.readString() == testSendString){
       ledBlink();
     }
 
