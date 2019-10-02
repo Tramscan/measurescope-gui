@@ -24,7 +24,8 @@ public class TestFrames extends JFrame {
     private JTextField xText = new JTextField(5);
     private JTextField yText = new JTextField(5);
     private JButton coordPress = new JButton("Change Coords");
-    private static SerialPort serialPort = new SerialPort("COM1");
+    private static SerialPort serialPort = new SerialPort("COM8");
+    private static String testSendString="G0 X100";
     /*
     private SerialTest st = new SerialTest();
     
@@ -66,6 +67,15 @@ public class TestFrames extends JFrame {
         coordPress.addActionListener(new ButtonListener());
         //actionlisteners for button actions
     }
+    
+    public static void openWait(long ms) {
+    	System.out.println("Waiting " +  ms +  " seconds.");
+    	try{
+    		Thread.sleep(ms*1000);
+    	}catch (InterruptedException e) {
+    		e.printStackTrace();
+    	}
+    }
 
     public static void main(String[] args) {
 
@@ -104,20 +114,24 @@ public class TestFrames extends JFrame {
     	//jssc write block
     	
     	//serialport declaration is in instance vars
+    	System.out.println("Port Opening...");
     	try {
     	    serialPort.openPort();
-
+    	    System.out.println("Port Opened");
     	    serialPort.setParams(SerialPort.BAUDRATE_9600,
     	                         SerialPort.DATABITS_8,
     	                         SerialPort.STOPBITS_1,
     	                         SerialPort.PARITY_NONE);
-
+    	    System.out.println("Port parameters set...");
     	    serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN | 
     	                                  SerialPort.FLOWCONTROL_RTSCTS_OUT);
-
+    	    System.out.println("Flow control mode set...");
     	    serialPort.addEventListener(new PortReader(), SerialPort.MASK_RXCHAR);
-
-    	    serialPort.writeString("Hurrah!");
+    	    System.out.println("Event listener added...");
+    	    openWait(10);
+    	    
+    	    serialPort.writeString(testSendString);
+    	    System.out.println(testSendString+ " has been sent");
     	}
     	catch (SerialPortException ex) {
     	    System.out.println("There are an error on writing string to port T: " + ex);
@@ -163,19 +177,31 @@ public class TestFrames extends JFrame {
             xCoord-=5;
             repaint();
             //moving ball left and repainting, same functionality for the different directions
-            
+            try {
+            	serialPort.writeString(testSendString);
+            }catch (SerialPortException ex){
+            	System.out.println("There are an error on writing string to port T: " + ex);
+            }
         }
 
         public void right() {
             xCoord+=5;
             repaint();
             //remember to put sample gcode writing here
-            
+            try {
+            	serialPort.writeString(testSendString);
+            }catch (SerialPortException ex){
+            	System.out.println("There are an error on writing string to port T: " + ex);
+            }
         }
         public void up() {
             yCoord-=5;
             repaint();
-            
+            try {
+            	serialPort.writeString(testSendString);
+            }catch (SerialPortException ex){
+            	System.out.println("There are an error on writing string to port T: " + ex);
+            }
             
             
         }
@@ -183,7 +209,11 @@ public class TestFrames extends JFrame {
         public void down() {
             yCoord+=5;
             repaint();
-            
+            try {
+            	serialPort.writeString(testSendString);
+            }catch (SerialPortException ex){
+            	System.out.println("There are an error on writing string to port T: " + ex);
+            }
         }
         
         public void replace(int x, int y) {
@@ -204,7 +234,7 @@ public class TestFrames extends JFrame {
                 yCoord = getHeight()/2;
                 //sets coordinates at half the height and width of the screen
             }
-            System.out.println("X" + getWidth());
+            //System.out.println("X" + getWidth());
             aBall.drawOval(xCoord, yCoord, 10, 10);
         }
     }
@@ -219,6 +249,10 @@ public class TestFrames extends JFrame {
     	
 
     }
+    
+    
+    
+    
     private static class PortReader implements SerialPortEventListener {
 
         @Override
