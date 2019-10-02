@@ -24,16 +24,11 @@ public class TestFrames extends JFrame {
     private JTextField xText = new JTextField(5);
     private JTextField yText = new JTextField(5);
     private JButton coordPress = new JButton("Change Coords");
+    private JButton connectButton = new JButton("Connect");
+    private JTextField miscString = new JTextField(8);
+    private JButton sendmsgButton = new JButton("Send Message");
     private static SerialPort serialPort = new SerialPort("COM8");
-    private static String testSendString="G0 X100";
-    /*
-    private SerialTest st = new SerialTest();
-    
-    //serial output and input
-    public static BufferedReader input;
-    public static OutputStream output;
-    public static SerialTest serial = new SerialTest();
-    */
+
     //instantiate buttons, labels, and panels
 
 
@@ -52,6 +47,9 @@ public class TestFrames extends JFrame {
         labelPanel.add(xText);
         labelPanel.add(yText);
         labelPanel.add(coordPress);
+        labelPanel.add(connectButton);
+        labelPanel.add(miscString);
+        labelPanel.add(sendmsgButton);
         //add buttons/labels to respective panels
 
         ballPanel.setBackground(Color.RED);
@@ -65,6 +63,8 @@ public class TestFrames extends JFrame {
         jbtUp.addActionListener(new ButtonListener());
         jbtDown.addActionListener(new ButtonListener());
         coordPress.addActionListener(new ButtonListener());
+        connectButton.addActionListener(new ButtonListener());
+        sendmsgButton.addActionListener(new ButtonListener());
         //actionlisteners for button actions
     }
     
@@ -79,9 +79,7 @@ public class TestFrames extends JFrame {
 
     public static void main(String[] args) {
 
-    	
         TestFrames mainWindow = new TestFrames();
-        
         //makes new window
         mainWindow.setTitle("TEST");
         mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -90,12 +88,9 @@ public class TestFrames extends JFrame {
         mainWindow.setVisible(true);
         //sets window visible
         
-       
-        
     	//jssc part
-    	// getting serial ports list into the array
-    	String[] portNames = SerialPortList.getPortNames();
-    	        
+    	// getting serial ports list into the array, printing available ports
+    	String[] portNames = SerialPortList.getPortNames();  
     	if (portNames.length == 0) {
     	    System.out.println("There are no serialports  You can use an emulator, such ad VSPE, to create a virtual serial port.");
     	    System.out.println("Press Enter to exit");
@@ -106,37 +101,11 @@ public class TestFrames extends JFrame {
     	    }
     	    return;
     	}
-
     	for (int i = 0; i < portNames.length; i++){
     	    System.out.println(portNames[i]);
     	}
-    	
-    	//jssc write block
-    	
+
     	//serialport declaration is in instance vars
-    	System.out.println("Port Opening...");
-    	try {
-    	    serialPort.openPort();
-    	    System.out.println("Port Opened");
-    	    serialPort.setParams(SerialPort.BAUDRATE_9600,
-    	                         SerialPort.DATABITS_8,
-    	                         SerialPort.STOPBITS_1,
-    	                         SerialPort.PARITY_NONE);
-    	    System.out.println("Port parameters set...");
-    	    serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN | 
-    	                                  SerialPort.FLOWCONTROL_RTSCTS_OUT);
-    	    System.out.println("Flow control mode set...");
-    	    serialPort.addEventListener(new PortReader(), SerialPort.MASK_RXCHAR);
-    	    System.out.println("Event listener added...");
-    	    openWait(10);
-    	    
-    	    serialPort.writeString(testSendString);
-    	    System.out.println(testSendString+ " has been sent");
-    	}
-    	catch (SerialPortException ex) {
-    	    System.out.println("There are an error on writing string to port T: " + ex);
-    	}
-    	
     }
 
     class ButtonListener implements ActionListener {
@@ -164,6 +133,40 @@ public class TestFrames extends JFrame {
             if(buttonPressed.getSource() == coordPress) {
             	ballPanel.replace(Integer.parseInt(xText.getText()),Integer.parseInt(yText.getText()));
             }
+            if(buttonPressed.getSource()==connectButton) {
+            	System.out.println("Port Opening...");
+            	try {
+            	    serialPort.openPort();
+            	    System.out.println("Port Opened");
+            	    serialPort.setParams(SerialPort.BAUDRATE_9600,
+            	                         SerialPort.DATABITS_8,
+            	                         SerialPort.STOPBITS_1,
+            	                         SerialPort.PARITY_NONE);
+            	    System.out.println("Port parameters set...");
+            	    serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN | 
+            	                                  SerialPort.FLOWCONTROL_RTSCTS_OUT);
+            	    System.out.println("Flow control mode set...");
+            	    serialPort.addEventListener(new PortReader(), SerialPort.MASK_RXCHAR);
+            	    System.out.println("Event listener added...");
+            	    openWait(5);
+            	    System.out.println("Done.");
+            	}
+            	catch (SerialPortException ex) {
+            	    System.out.println("There are an error on writing string to port T: " + ex);
+            	}
+            	
+            }
+            if(buttonPressed.getSource()==sendmsgButton) {
+            	
+            	try {
+            		serialPort.writeString(miscString.getText());
+            		System.out.println("Sent "+ miscString.getText());
+            	}catch (SerialPortException ex) {
+                	System.out.println("There are an error on writing string to port T: " + ex);
+            	}
+            	
+            	
+            }
             //checks for where the buttonPressed action is coming from and does according action
         }
     }
@@ -177,43 +180,51 @@ public class TestFrames extends JFrame {
             xCoord-=5;
             repaint();
             //moving ball left and repainting, same functionality for the different directions
+            
+            /*
             try {
-            	serialPort.writeString(testSendString);
+            	serialPort.writeString();
             }catch (SerialPortException ex){
             	System.out.println("There are an error on writing string to port T: " + ex);
             }
+            */
         }
 
         public void right() {
             xCoord+=5;
             repaint();
             //remember to put sample gcode writing here
+            /*
             try {
-            	serialPort.writeString(testSendString);
+            	serialPort.writeString();
             }catch (SerialPortException ex){
             	System.out.println("There are an error on writing string to port T: " + ex);
             }
+            */
         }
         public void up() {
             yCoord-=5;
             repaint();
+            /*
             try {
-            	serialPort.writeString(testSendString);
+            	serialPort.writeString();
             }catch (SerialPortException ex){
             	System.out.println("There are an error on writing string to port T: " + ex);
             }
-            
+            */
             
         }
 
         public void down() {
             yCoord+=5;
             repaint();
+            /*
             try {
-            	serialPort.writeString(testSendString);
+            	serialPort.writeString();
             }catch (SerialPortException ex){
             	System.out.println("There are an error on writing string to port T: " + ex);
             }
+            */
         }
         
         public void replace(int x, int y) {
