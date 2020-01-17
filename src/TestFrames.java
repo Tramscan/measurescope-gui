@@ -159,7 +159,7 @@ public class TestFrames extends JFrame {
             if(buttonPressed.getSource()==sendmsgButton) {
             	
             	try {
-            		serialPort.writeString(miscString.getText());
+            		serialPort.writeString(miscString.getText()+"\n");
             		System.out.println("Sent "+ miscString.getText());
             	}catch (SerialPortException ex) {
                 	System.out.println("There are an error on writing string to port T: " + ex);
